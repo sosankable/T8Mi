@@ -256,7 +256,7 @@ def handle_content_message(event):
         image = IMGUR_CLIENT.image_upload(filename, "first", "first")
         link = image["response"]["data"]["link"]
         name = azure_face_recognition(filename)
-
+        print(name)
         if name != "unknown":
             output = name
         else:
