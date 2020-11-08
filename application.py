@@ -107,21 +107,23 @@ def azure_ocr(url):
 
 
 def azure_face_recognition(filename):
-
     img = open(filename, "r+b")
     detected_face = FACE_CLIENT.face.detect_with_stream(
         img, detection_model="detection_01"
     )
+    if len(detected_face) == 0:
+        return ""
     results = FACE_CLIENT.face.identify([detected_face[0].face_id], PERSON_GROUP_ID)
     if len(results) == 0:
         return "unknown"
-    for i in results:
-        print(i.face_id)
-        print(i.candidates[0].confidence)
-        person = FACE_CLIENT.person_group_person.get(
-            PERSON_GROUP_ID, i.as_dict()["candidates"][0]["person_id"]
-        )
-        print(person.name)
+    result = results[0].as_dict()
+    if len(result["candidates"]) == 0:
+        return "unknown"
+    if result["candidates"][0].confidence < 0.5:
+        return "unknown"
+    person = FACE_CLIENT.person_group_person.get(
+        PERSON_GROUP_ID, result.as_dict()["candidates"][0]["person_id"]
+    )
     return person.name
 
 
@@ -256,11 +258,11 @@ def handle_content_message(event):
         image = IMGUR_CLIENT.image_upload(filename, "first", "first")
         link = image["response"]["data"]["link"]
         name = azure_face_recognition(filename)
-        print(name)
-        if name != "unknown":
+
+        if name != "":
             output = name
         else:
-            plate = "License Plate: {}".format(azure_ocr(link))
+            plate = azure_ocr(link)
             az_output = AzureImageOutput(link, filename)
             link = az_output()
             if len(plate) > 0:
