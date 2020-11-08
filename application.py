@@ -113,7 +113,7 @@ def azure_face_recognition(filename):
         img, detection_model="detection_01"
     )
     results = FACE_CLIENT.face.identify([detected_face[0].face_id], PERSON_GROUP_ID)
-    if len(results):
+    if len(results) == 0:
         return "unknown"
     for i in results:
         print(i.face_id)
