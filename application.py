@@ -2,52 +2,61 @@
 Object detection and image description on LINE bot
 """
 import os
+import re
 import json
 import requests
 from flask import Flask, request, abort
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
 from msrest.authentication import CognitiveServicesCredentials
-from linebot import (LineBotApi, WebhookHandler)
-from linebot.exceptions import (InvalidSignatureError)
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage,
-                            FlexSendMessage, ImageMessage)
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import (
+    MessageEvent,
+    TextMessage,
+    TextSendMessage,
+    FlexSendMessage,
+    ImageMessage,
+)
 from imgur_python import Imgur
 from PIL import Image, ImageDraw, ImageFont
+import time
 
 app = Flask(__name__)
 
 try:
-    with open('/home/config.json', 'r') as f:
+    with open("/home/config.json", "r") as f:
         CONFIG = json.load(f)
     f.close()
 
-    SUBSCRIPTION_KEY = CONFIG['azure']['subscription_key']
-    ENDPOINT = CONFIG['azure']['endpoint']
+    SUBSCRIPTION_KEY = CONFIG["azure"]["subscription_key"]
+    ENDPOINT = CONFIG["azure"]["endpoint"]
 
-    FACE_KEY = CONFIG['azure']['face_key']
-    FACE_END = CONFIG['azure']['face_end']
+    FACE_KEY = CONFIG["azure"]["face_key"]
+    FACE_END = CONFIG["azure"]["face_end"]
 
-    LINE_SECRET = CONFIG['line']['line_secret']
-    LINE_TOKEN = CONFIG['line']['line_token']
+    LINE_SECRET = CONFIG["line"]["line_secret"]
+    LINE_TOKEN = CONFIG["line"]["line_token"]
 
-    IMGUR_CONFIG = CONFIG['imgur']
+    IMGUR_CONFIG = CONFIG["imgur"]
 
 except FileNotFoundError:
-    SUBSCRIPTION_KEY = os.getenv('SUBSCRIPTION_KEY')
-    ENDPOINT = os.getenv('ENDPOINT')
-    FACE_KEY = os.getenv('FACE_KEY')
-    FACE_END = os.getenv('FACE_END')
-    LINE_SECRET = os.getenv('LINE_SECRET')
-    LINE_TOKEN = os.getenv('LINE_TOKEN')
+    SUBSCRIPTION_KEY = os.getenv("SUBSCRIPTION_KEY")
+    ENDPOINT = os.getenv("ENDPOINT")
+    FACE_KEY = os.getenv("FACE_KEY")
+    FACE_END = os.getenv("FACE_END")
+    LINE_SECRET = os.getenv("LINE_SECRET")
+    LINE_TOKEN = os.getenv("LINE_TOKEN")
     IMGUR_CONFIG = {
-        "client_id": os.getenv('IMGUR_ID'),
-        "client_secret": os.getenv('IMGUR_SECRET'),
-        "access_token": os.getenv('IMGUR_ACCESS'),
-        "refresh_token": os.getenv('IMGUR_REFRESH')
+        "client_id": os.getenv("IMGUR_ID"),
+        "client_secret": os.getenv("IMGUR_SECRET"),
+        "access_token": os.getenv("IMGUR_ACCESS"),
+        "refresh_token": os.getenv("IMGUR_REFRESH"),
     }
 
 CV_CLIENT = ComputerVisionClient(
-    ENDPOINT, CognitiveServicesCredentials(SUBSCRIPTION_KEY))
+    ENDPOINT, CognitiveServicesCredentials(SUBSCRIPTION_KEY)
+)
 LINE_BOT = LineBotApi(LINE_TOKEN)
 HANDLER = WebhookHandler(LINE_SECRET)
 IMGUR_CLIENT = Imgur(config=IMGUR_CONFIG)
@@ -61,19 +70,46 @@ def azure_describe(url):
     output = ""
     for caption in description_results.captions:
         output += "'{}' with confidence {:.2f}% \n".format(
-            caption.text, caption.confidence * 100)
+            caption.text, caption.confidence * 100
+        )
     return output
 
 
-class AzureImageOutput():
+def azure_ocr(url):
+    ocr_results = CV_CLIENT.read(url, raw=True)
+    # Get the operation location (URL with an ID at the end) from the response
+    operation_location_remote = ocr_results.headers["Operation-Location"]
+    # Grab the ID from the URL
+    operation_id = operation_location_remote.split("/")[-1]
+    # Call the "GET" API and wait for it to retrieve the results
+    while True:
+        get_handw_text_results = CV_CLIENT.get_read_result(operation_id)
+        if get_handw_text_results.status not in ["notStarted", "running"]:
+            break
+        time.sleep(1)
+
+    # Get detected text
+    text = []
+    if get_handw_text_results.status == OperationStatusCodes.succeeded:
+        for text_result in get_handw_text_results.analyze_result.read_results:
+            for line in text_result.lines:
+                if len(line.text) <= 8:
+                    text.append(line.text)
+    # Filter text for Taiwan license plate
+    r = re.compile("[0-9A-Z]{2,4}[.-]{1}[0-9A-Z]{2,4}")
+    text = list(filter(r.match, text))
+    return text[0]
+
+
+class AzureImageOutput:
     def __init__(self, url, filename):
         self.url = url
         self.filename = filename
         self.img = Image.open(filename)
         self.draw = ImageDraw.Draw(self.img)
         self.fnt = ImageFont.truetype(
-            "static/TaipeiSansTCBeta-Regular.ttf",
-            size=int(5e-2 * self.img.size[1]))
+            "static/TaipeiSansTCBeta-Regular.ttf", size=int(5e-2 * self.img.size[1])
+        )
 
     def azure_object_detection(self):
         object_detection = CV_CLIENT.detect_objects(self.url)
@@ -85,53 +121,57 @@ class AzureImageOutput():
                 bot = obj.rectangle.y + obj.rectangle.h
                 name = obj.object_property
                 confidence = obj.confidence
-                print("{} at location {}, {}, {}, {}".format(
-                    name, left, right, top, bot))
+                print(
+                    "{} at location {}, {}, {}, {}".format(name, left, right, top, bot)
+                )
                 self.draw.rectangle(
-                    [left, top, right, bot], outline=(255, 0, 0), width=3)
+                    [left, top, right, bot], outline=(255, 0, 0), width=3
+                )
                 self.draw.text(
                     [left, abs(top - 12)],
                     "{} {}".format(name, confidence),
                     fill=(255, 0, 0),
-                    font=self.fnt)
+                    font=self.fnt,
+                )
 
     def azure_face_detection(self):
-        face_api_url = '{}face/v1.0/detect'.format(FACE_END)
-        headers = {'Ocp-Apim-Subscription-Key': FACE_KEY}
+        face_api_url = "{}face/v1.0/detect".format(FACE_END)
+        headers = {"Ocp-Apim-Subscription-Key": FACE_KEY}
         params = {
-            'returnFaceId': 'true',
-            'returnFaceLandmarks': 'false',
-            'returnFaceAttributes': 'emotion',
+            "returnFaceId": "true",
+            "returnFaceLandmarks": "false",
+            "returnFaceAttributes": "emotion",
         }
         response = requests.post(
-            face_api_url,
-            params=params,
-            headers=headers,
-            json={"url": self.url})
+            face_api_url, params=params, headers=headers, json={"url": self.url}
+        )
         if len(response.json()) > 0:
             for obj in response.json():
-                left = obj['faceRectangle']['left']
-                top = obj['faceRectangle']['top']
-                right = obj['faceRectangle']['left'] + obj['faceRectangle']['width']
-                bot = obj['faceRectangle']['top'] + obj['faceRectangle']['height']
+                left = obj["faceRectangle"]["left"]
+                top = obj["faceRectangle"]["top"]
+                right = obj["faceRectangle"]["left"] + obj["faceRectangle"]["width"]
+                bot = obj["faceRectangle"]["top"] + obj["faceRectangle"]["height"]
                 emotion = max(
-                    obj["faceAttributes"]['emotion'],
-                    key=obj["faceAttributes"]['emotion'].get)
-                confidence = max(obj["faceAttributes"]['emotion'].values())
+                    obj["faceAttributes"]["emotion"],
+                    key=obj["faceAttributes"]["emotion"].get,
+                )
+                confidence = max(obj["faceAttributes"]["emotion"].values())
                 self.draw.rectangle(
-                    [left, top, right, bot], outline=(255, 0, 0), width=3)
+                    [left, top, right, bot], outline=(255, 0, 0), width=3
+                )
                 self.draw.text(
                     [left, abs(top - 12)],
                     "{} {}".format(emotion, confidence),
                     fill=(255, 0, 0),
-                    font=self.fnt)
+                    font=self.fnt,
+                )
 
     def __call__(self):
         self.azure_object_detection()
         self.azure_face_detection()
         self.img.save(self.filename)
-        image = IMGUR_CLIENT.image_upload(self.filename, 'first', 'first')
-        link = image['response']['data']['link']
+        image = IMGUR_CLIENT.image_upload(self.filename, "first", "first")
+        link = image["response"]["data"]["link"]
         os.remove(self.filename)
         return link
 
@@ -142,13 +182,13 @@ def hello():
     return "Hello World!!!!!"
 
 
-@app.route("/callback", methods=['POST'])
+@app.route("/callback", methods=["POST"])
 def callback():
     """
     LINE bot webhook callback
     """
     # get X-Line-Signature header value
-    signature = request.headers['X-Line-Signature']
+    signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
     print(body)
@@ -159,7 +199,7 @@ def callback():
             "Invalid signature. Please check your channel access token/channel secret."
         )
         abort(400)
-    return 'OK'
+    return "OK"
 
 
 @HANDLER.add(MessageEvent, message=TextMessage)
@@ -185,22 +225,20 @@ def handle_content_message(event):
         print(event.message.id)
         filename = "{}.jpg".format(event.message.id)
         message_content = LINE_BOT.get_message_content(event.message.id)
-        with open(filename, 'wb') as f_w:
+        with open(filename, "wb") as f_w:
             for chunk in message_content.iter_content():
                 f_w.write(chunk)
         f_w.close()
-        image = IMGUR_CLIENT.image_upload(filename, 'first', 'first')
-        link = image['response']['data']['link']
-        output = azure_describe(link)
+        image = IMGUR_CLIENT.image_upload(filename, "first", "first")
+        link = image["response"]["data"]["link"]
+        output = "License Plate: {}".format(azure_ocr(link))
         az_output = AzureImageOutput(link, filename)
         link = az_output()
-        with open('templates/detect_result.json', 'r') as f_r:
+        with open("templates/detect_result.json", "r") as f_r:
             bubble = json.load(f_r)
         f_r.close()
-        bubble['body']['contents'][0]['contents'][0]['contents'][0][
-            'text'] = output
-        bubble['header']['contents'][0]['contents'][0]['contents'][0][
-            'url'] = link
+        bubble["body"]["contents"][0]["contents"][0]["contents"][0]["text"] = output
+        bubble["header"]["contents"][0]["contents"][0]["contents"][0]["url"] = link
         LINE_BOT.reply_message(
-            event.reply_token,
-            [FlexSendMessage(alt_text="Report", contents=bubble)])
+            event.reply_token, [FlexSendMessage(alt_text="Report", contents=bubble)]
+        )
