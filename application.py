@@ -111,7 +111,7 @@ def azure_face_recognition(filename):
     detected_face = FACE_CLIENT.face.detect_with_stream(
         img, detection_model="detection_01"
     )
-    if len(detected_face) == 0:
+    if len(detected_face) != 1:
         return ""
     results = FACE_CLIENT.face.identify([detected_face[0].face_id], PERSON_GROUP_ID)
     if len(results) == 0:
