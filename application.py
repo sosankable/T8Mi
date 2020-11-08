@@ -8,6 +8,8 @@ import requests
 from flask import Flask, request, abort
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from azure.cognitiveservices.vision.face import FaceClient
+from azure.cognitiveservices.vision.face.models import TrainingStatusType, Person
 from msrest.authentication import CognitiveServicesCredentials
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -57,9 +59,12 @@ except FileNotFoundError:
 CV_CLIENT = ComputerVisionClient(
     ENDPOINT, CognitiveServicesCredentials(SUBSCRIPTION_KEY)
 )
+FACE_CLIENT = FaceClient(FACE_END, CognitiveServicesCredentials(FACE_KEY))
+
 LINE_BOT = LineBotApi(LINE_TOKEN)
 HANDLER = WebhookHandler(LINE_SECRET)
 IMGUR_CLIENT = Imgur(config=IMGUR_CONFIG)
+PERSON_GROUP_ID = "tibame"
 
 
 def azure_describe(url):
@@ -99,6 +104,25 @@ def azure_ocr(url):
     r = re.compile("[0-9A-Z]{2,4}[.-]{1}[0-9A-Z]{2,4}")
     text = list(filter(r.match, text))
     return text[0]
+
+
+def azure_face_recognition(filename):
+
+    img = open(filename, "r+b")
+    detected_face = FACE_CLIENT.face.detect_with_stream(
+        img, detection_model="detection_01"
+    )
+    results = FACE_CLIENT.face.identify([detected_face[0].face_id], PERSON_GROUP_ID)
+    if len(results):
+        return "unknown"
+    for i in results:
+        print(i.face_id)
+        print(i.candidates[0].confidence)
+        person = FACE_CLIENT.person_group_person.get(
+            PERSON_GROUP_ID, i.as_dict()["candidates"][0]["person_id"]
+        )
+        print(person.name)
+    return person.name
 
 
 class AzureImageOutput:
@@ -231,9 +255,19 @@ def handle_content_message(event):
         f_w.close()
         image = IMGUR_CLIENT.image_upload(filename, "first", "first")
         link = image["response"]["data"]["link"]
-        output = "License Plate: {}".format(azure_ocr(link))
-        az_output = AzureImageOutput(link, filename)
-        link = az_output()
+        name = azure_face_recognition(filename)
+
+        if name != "unknown":
+            output = name
+        else:
+            plate = "License Plate: {}".format(azure_ocr(link))
+            az_output = AzureImageOutput(link, filename)
+            link = az_output()
+            if len(plate) > 0:
+                output = "License Plate: {}".format(plate)
+            else:
+                output = azure_describe(link)
+
         with open("templates/detect_result.json", "r") as f_r:
             bubble = json.load(f_r)
         f_r.close()
