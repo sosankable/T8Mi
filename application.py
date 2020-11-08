@@ -119,7 +119,7 @@ def azure_face_recognition(filename):
     result = results[0].as_dict()
     if len(result["candidates"]) == 0:
         return "unknown"
-    if result["candidates"][0].confidence < 0.5:
+    if result["candidates"][0]["confidence"] < 0.5:
         return "unknown"
     person = FACE_CLIENT.person_group_person.get(
         PERSON_GROUP_ID, result.as_dict()["candidates"][0]["person_id"]
