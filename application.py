@@ -103,7 +103,7 @@ def azure_ocr(url):
     # Filter text for Taiwan license plate
     r = re.compile("[0-9A-Z]{2,4}[.-]{1}[0-9A-Z]{2,4}")
     text = list(filter(r.match, text))
-    return text[0] if len(text) > 0 else ""
+    return text[0].replace(".", "-") if len(text) > 0 else ""
 
 
 def azure_face_recognition(filename):
