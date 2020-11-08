@@ -9,7 +9,6 @@ from flask import Flask, request, abort
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
 from azure.cognitiveservices.vision.face import FaceClient
-from azure.cognitiveservices.vision.face.models import TrainingStatusType, Person
 from msrest.authentication import CognitiveServicesCredentials
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -26,45 +25,28 @@ import time
 
 app = Flask(__name__)
 
-try:
-    with open("/home/config.json", "r") as f:
-        CONFIG = json.load(f)
-    f.close()
 
-    SUBSCRIPTION_KEY = CONFIG["azure"]["subscription_key"]
-    ENDPOINT = CONFIG["azure"]["endpoint"]
+CONFIG = json.load(open("/home/config.json", "r"))
 
-    FACE_KEY = CONFIG["azure"]["face_key"]
-    FACE_END = CONFIG["azure"]["face_end"]
-
-    LINE_SECRET = CONFIG["line"]["line_secret"]
-    LINE_TOKEN = CONFIG["line"]["line_token"]
-
-    IMGUR_CONFIG = CONFIG["imgur"]
-
-except FileNotFoundError:
-    SUBSCRIPTION_KEY = os.getenv("SUBSCRIPTION_KEY")
-    ENDPOINT = os.getenv("ENDPOINT")
-    FACE_KEY = os.getenv("FACE_KEY")
-    FACE_END = os.getenv("FACE_END")
-    LINE_SECRET = os.getenv("LINE_SECRET")
-    LINE_TOKEN = os.getenv("LINE_TOKEN")
-    IMGUR_CONFIG = {
-        "client_id": os.getenv("IMGUR_ID"),
-        "client_secret": os.getenv("IMGUR_SECRET"),
-        "access_token": os.getenv("IMGUR_ACCESS"),
-        "refresh_token": os.getenv("IMGUR_REFRESH"),
-    }
-
+SUBSCRIPTION_KEY = CONFIG["azure"]["subscription_key"]
+ENDPOINT = CONFIG["azure"]["endpoint"]
 CV_CLIENT = ComputerVisionClient(
     ENDPOINT, CognitiveServicesCredentials(SUBSCRIPTION_KEY)
 )
-FACE_CLIENT = FaceClient(FACE_END, CognitiveServicesCredentials(FACE_KEY))
 
+FACE_KEY = CONFIG["azure"]["face_key"]
+FACE_END = CONFIG["azure"]["face_end"]
+FACE_CLIENT = FaceClient(FACE_END, CognitiveServicesCredentials(FACE_KEY))
+PERSON_GROUP_ID = "tibame"
+
+LINE_SECRET = CONFIG["line"]["line_secret"]
+LINE_TOKEN = CONFIG["line"]["line_token"]
 LINE_BOT = LineBotApi(LINE_TOKEN)
 HANDLER = WebhookHandler(LINE_SECRET)
+
+
+IMGUR_CONFIG = CONFIG["imgur"]
 IMGUR_CLIENT = Imgur(config=IMGUR_CONFIG)
-PERSON_GROUP_ID = "tibame"
 
 
 def azure_describe(url):
@@ -81,6 +63,9 @@ def azure_describe(url):
 
 
 def azure_ocr(url):
+    """
+    Azure OCR: get characters from image url
+    """
     ocr_results = CV_CLIENT.read(url, raw=True)
     # Get the operation location (URL with an ID at the end) from the response
     operation_location_remote = ocr_results.headers["Operation-Location"]
@@ -107,6 +92,9 @@ def azure_ocr(url):
 
 
 def azure_face_recognition(filename):
+    """
+    Azure face recognition
+    """
     img = open(filename, "r+b")
     detected_face = FACE_CLIENT.face.detect_with_stream(
         img, detection_model="detection_01"
@@ -216,6 +204,7 @@ def callback():
     # get X-Line-Signature header value
     signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
+    # pylint: disable=maybe-no-member
     app.logger.info("Request body: " + body)
     print(body)
     try:

@@ -53,34 +53,3 @@ git remote add azure <your_git_url>
 
 8. `git push azure master`
 
-## On Heroku
-
-### Prepare
-
-1. Create New heroku app
-
-2. Install [heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
-
-3. Login: `heroku login`
-
-4. Add heroku remote
-```
-cd cv_tutorial
-heroku git:remote -a <your_heroku_app>
-```
-
-5. Set heroku environment variables
-```
-heroku config:set ENDPOINT=https://<your name of Azure Cognitive Services>.cognitiveservices.azure.com/
-heroku config:set SUBSCRIPTION_KEY=...
-heroku config:set LINE_SECRET=...
-heroku config:set LINE_TOKEN=...
-heroku config:set IMGUR_ID=...
-heroku config:set IMGUR_SECRET=...
-heroku config:set IMGUR_ACCESS=...
-heroku config:set IMGUR_REFRESH=...
-heroku config:set FACE_KEY=...
-heroku config:set FACE_END=...
-```
-
-6. `git push herku master`
