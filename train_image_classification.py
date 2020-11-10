@@ -9,6 +9,7 @@ from azure.cognitiveservices.vision.customvision.training import (
 from azure.cognitiveservices.vision.customvision.training.models import (
     ImageFileCreateBatch,
     ImageFileCreateEntry,
+    CustomVisionErrorException,
 )
 from msrest.authentication import ApiKeyCredentials
 
@@ -18,7 +19,6 @@ def parse_args():
     Parse argument
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--image_folder", help="image folder", type=str)
     parser.add_argument(
         "-c",
         "--config",
@@ -57,7 +57,7 @@ def main():
     try:
         project = trainer.create_project(config["project_name"])
         project_id = project.id
-    except:
+    except CustomVisionErrorException:
         project_list = trainer.get_projects()
         projects = {}
         for i in project_list:
@@ -69,7 +69,7 @@ def main():
     prediction_resource_id = config["prediction_resource_id"]
     # Make two tags in the new project
 
-    base_image_url = args.image_folder
+    base_image_url = config["image_folder"]
 
     print("Adding images...")
     image_list = []
