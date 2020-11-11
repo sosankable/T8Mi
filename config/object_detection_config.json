@@ -1,0 +1,14 @@
+{
+    "ENDPOINT": "<your endpoint>",
+    "training_key": "<your training key>",
+    "prediction_key": "<your prediction key>",
+    "prediction_resource_id": "<your prediction resource id>",
+    "publish_iteration_name": "publish iteration name can be defined by yourself",
+    "project_name": "project name can be defined by yourself",
+    "annotation_file": "annotation.json",
+    "label": [
+        "fork",
+        "scissors"
+    ],
+    "image_folder": "your image folder"
+}
