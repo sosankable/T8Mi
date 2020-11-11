@@ -38,12 +38,11 @@ def get_project_id(config):
     """
     credentials = ApiKeyCredentials(in_headers={"Training-key": config["training_key"]})
     trainer = CustomVisionTrainingClient(config["ENDPOINT"], credentials)
-    project_list = trainer.get_projects()
-    project_id = {}
-    for i in project_list:
-        temp = i.as_dict()
-        project_id[temp["name"]] = temp["id"]
-        project_id[temp["name"]] = temp["id"]
+    project_id = next(
+        proj.id
+        for proj in trainer.get_projects()
+        if proj.name == config["project_name"]
+    )
     return project_id
 
 
@@ -54,14 +53,18 @@ def main():
     args = parse_args()
     config = json.load(open(args.config, "r"))
 
+    # Get the predictor
     prediction_credentials = ApiKeyCredentials(
         in_headers={"Prediction-key": config["prediction_key"]}
     )
     predictor = CustomVisionPredictionClient(config["ENDPOINT"], prediction_credentials)
+
+    # ======================================================================================
+    # Open the sample image and get back the prediction results.
     project_id = get_project_id(config)
     with open(args.image, "rb") as image_contents:
         results = predictor.classify_image(
-            project_id[config["project_name"]],
+            project_id,
             config["publish_iteration_name"],
             image_contents.read(),
         )

@@ -27,34 +27,42 @@ def parse_args():
     return args
 
 
+def get_project_id(config):
+    """
+    Get project ID list
+    """
+    credentials = ApiKeyCredentials(in_headers={"Training-key": config["training_key"]})
+    trainer = CustomVisionTrainingClient(config["ENDPOINT"], credentials)
+    project_id = next(
+        proj.id
+        for proj in trainer.get_projects()
+        if proj.name == config["project_name"]
+    )
+    return project_id
+
+
 def main():
     args = parse_args()
     config = json.load(open(args.config, "r"))
 
-    credentials = ApiKeyCredentials(in_headers={"Training-key": config["training_key"]})
-    trainer = CustomVisionTrainingClient(config["ENDPOINT"], credentials)
-    project_list = trainer.get_projects()
-    project_id = {}
-    for i in project_list:
-        temp = i.as_dict()
-        project_id[temp["name"]] = temp["id"]
-        project_id[temp["name"]] = temp["id"]
-
-    # Now there is a trained endpoint that can be used to make a prediction
+    # Get the predictor
     prediction_credentials = ApiKeyCredentials(
         in_headers={"Prediction-key": config["prediction_key"]}
     )
     predictor = CustomVisionPredictionClient(config["ENDPOINT"], prediction_credentials)
 
+    # ======================================================================================
     # Open the sample image and get back the prediction results.
+    project_id = get_project_id(config)
     with open(args.image, "rb") as test_data:
         results = predictor.detect_image(
-            project_id[config["project_name"]],
+            project_id,
             config["publish_iteration_name"],
             test_data,
         )
 
-    # Display the results.
+    # ======================================================================================
+    # Draw the bounding boxes on the image
     img = Image.open(args.image)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(
@@ -77,6 +85,8 @@ def main():
             )
 
     img.save("output.png")
+    print("Done!")
+    print("Please check ouptut.png")
 
 
 if __name__ == "__main__":
