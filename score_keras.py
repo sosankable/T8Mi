@@ -1,0 +1,20 @@
+import json
+import numpy as np
+import os
+from tensorflow.keras.models import load_model
+
+
+def init():
+    global model
+    # AZUREML_MODEL_DIR is an environment variable created during deployment.
+    # It is the path to the model folder (./azureml-models/$MODEL_NAME/$VERSION)
+    # For multiple models, it points to the folder containing all deployed models (./azureml-models)
+    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), "keras_lenet.h5")
+    model = load_model(model_path)
+
+
+def run(raw_data):
+    data = json.loads(raw_data)["data"].reshape(1, 28, 28, 1)
+    # make prediction
+    y_hat = model.predict(data)
+    return np.argmax(y_hat)
