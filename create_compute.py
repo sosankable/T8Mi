@@ -1,13 +1,17 @@
-# tutorial/02-create-compute.py
+"""
+Create a compute resource
+"""
 from azureml.core import Workspace
 from azureml.core.compute import ComputeTarget, AmlCompute
 from azureml.core.compute_target import ComputeTargetException
 
 
 def main():
-    work_space = (
-        Workspace.from_config()
-    )  # This automatically looks for a directory .azureml
+    """
+    Create a compute resource
+    """
+    # This automatically looks for a directory .azureml
+    work_space = Workspace.from_config()
 
     # Choose a name for your CPU cluster
     cpu_cluster_name = "cpu-cluster"
