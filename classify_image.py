@@ -17,7 +17,7 @@ from msrest.authentication import ApiKeyCredentials
 
 def parse_args():
     """
-    Parse argument
+    Parse arguments
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", help="image path", type=str)
@@ -34,7 +34,7 @@ def parse_args():
 
 def get_project_id(config):
     """
-    Get project ID list
+    Get the project ID list
     """
     credentials = ApiKeyCredentials(in_headers={"Training-key": config["training_key"]})
     trainer = CustomVisionTrainingClient(config["ENDPOINT"], credentials)

@@ -1,9 +1,9 @@
-# tutorial/src/train.py
+"""
+Training of LeNet with keras
+"""
 import os
 import argparse
-
 from azureml.core import Run
-
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Input
 from tensorflow.keras.utils import to_categorical
@@ -13,6 +13,9 @@ import numpy as np
 
 
 def load_image(path):
+    """
+    Load the mnist image
+    """
     f = gzip.open(path, "r")
 
     image_size = 28
@@ -26,6 +29,9 @@ def load_image(path):
 
 
 def load_label(path):
+    """
+    Load the labels of mnist
+    """
     f_p = gzip.open(path, "r")
     f_p.read(8)
     buf = f_p.read()
@@ -34,18 +40,27 @@ def load_label(path):
     return data
 
 
-def main():
+def parse_args():
+    """
+    Parse arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_folder", type=str, help="Path to the training data")
     parser.add_argument(
         "--log_folder", type=str, help="Path to the log", default="./logs"
     )
     args = parser.parse_args()
+    return args
 
+
+def main():
+    """
+    Training of LeNet with keras
+    """
+    args = parse_args()
     print("===== DATA =====")
-    print("DATA PATH: " + args.data_path)
+    print("DATA PATH: {}".format(args.data_path))
     print("LIST FILES IN DATA PATH...")
-    print(os.listdir(args.data_path))
     print("================")
     run = Run.get_context()
 
@@ -56,13 +71,8 @@ def main():
     train_label = load_label(
         os.path.join(args.data_folder, "train-labels-idx1-ubyte.gz")
     )
-    test_image = load_image(os.path.join(args.data_folder, "t10k-images-idx3-ubyte.gz"))
-    test_label = load_label(os.path.join(args.data_folder, "t10k-labels-idx1-ubyte.gz"))
-
     train_image /= 255
     train_label = to_categorical(train_label)
-    test_image /= 255
-    test_label = to_categorical(test_label)
 
     # LeNet
     input_layer = Input(shape=(28, 28, 1))
@@ -78,8 +88,8 @@ def main():
     model.compile(
         optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
     )
-    # Tensorboard
 
+    # Tensorboard
     tb_callback = TensorBoard(
         log_dir=args.log_folder,
         histogram_freq=0,
@@ -89,8 +99,8 @@ def main():
         embeddings_layer_names=None,
         embeddings_metadata=None,
     )
-    # train the network
 
+    # train the network
     history_callback = model.fit(
         train_image,
         train_label,
@@ -100,6 +110,7 @@ def main():
         callbacks=[tb_callback],
     )
 
+    # ouput log
     run.log("train_loss", history_callback.history["loss"])
     run.log("train_accuracy", history_callback.history["accuracy"])
     run.log("val_loss", history_callback.history["val_loss"])

@@ -1,3 +1,6 @@
+"""
+Training for image classification with Azure Custom Vision
+"""
 import argparse
 import glob
 import json
@@ -15,7 +18,7 @@ from msrest.authentication import ApiKeyCredentials
 
 def parse_args():
     """
-    Parse argument
+    Parse arguments
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -30,6 +33,9 @@ def parse_args():
 
 
 def add_image(label, base_image_url, project_id, trainer):
+    """
+    Add images with labels
+    """
     image_list = []
     image_tag = trainer.create_tag(project_id, label)
     filenames = glob.glob(os.path.join(base_image_url, label, "*.jpg"))
@@ -46,6 +52,9 @@ def add_image(label, base_image_url, project_id, trainer):
 
 
 def main():
+    """
+    Training for image classification with Azure Custom Vision
+    """
     args = parse_args()
     config = json.load(open(args.config, "r"))
     credentials = ApiKeyCredentials(in_headers={"Training-key": config["training_key"]})

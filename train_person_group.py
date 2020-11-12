@@ -1,11 +1,14 @@
+"""
+Create a person and train on Azure.
+"""
 import glob
 import os
 import sys
 import time
 import argparse
 import json
-from azure.cognitiveservices.vision.face import FaceClient
 from msrest.authentication import CognitiveServicesCredentials
+from azure.cognitiveservices.vision.face import FaceClient
 from azure.cognitiveservices.vision.face.models import (
     TrainingStatusType,
     APIErrorException,
@@ -15,9 +18,9 @@ CONFIG = json.load(open("config.json", "r"))
 FACE_KEY = CONFIG["azure"]["face_key"]
 FACE_END = CONFIG["azure"]["face_end"]
 FACE_CLIENT = FaceClient(FACE_END, CognitiveServicesCredentials(FACE_KEY))
-PERSON_GROUP_ID = "tibame"
 
 # Create empty Person Group. Person Group ID must be lower case, alphanumeric, and/or with '-', '_'.
+PERSON_GROUP_ID = "tibame"
 
 
 def train_person(group_id, name, image_list):
@@ -49,7 +52,7 @@ def train_person(group_id, name, image_list):
 
 def parse_args():
     """
-    Parse argument
+    Parse arguments
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(

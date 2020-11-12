@@ -1,10 +1,16 @@
+"""
+Run the prediction on Azure machine learning.
+"""
+import os
 import json
 import numpy as np
-import os
 from tensorflow.keras.models import load_model
 
 
 def init():
+    """
+    Load the model
+    """
     global model
     # AZUREML_MODEL_DIR is an environment variable created during deployment.
     # It is the path to the model folder (./azureml-models/$MODEL_NAME/$VERSION)
@@ -14,6 +20,9 @@ def init():
 
 
 def run(raw_data):
+    """
+    Prediction
+    """
     data = json.loads(raw_data)["data"].reshape(1, 28, 28, 1)
     # make prediction
     y_hat = model.predict(data)

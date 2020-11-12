@@ -1,18 +1,22 @@
+"""
+Object Detection with Azure Custom Vision
+"""
+import json
+
 import argparse
 from azure.cognitiveservices.vision.customvision.prediction import (
     CustomVisionPredictionClient,
 )
-from msrest.authentication import ApiKeyCredentials
-import json
 from azure.cognitiveservices.vision.customvision.training import (
     CustomVisionTrainingClient,
 )
+from msrest.authentication import ApiKeyCredentials
 from PIL import Image, ImageDraw, ImageFont
 
 
 def parse_args():
     """
-    Parse argument
+    Parse arguments
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", help="image path", type=str)
@@ -42,6 +46,9 @@ def get_project_id(config):
 
 
 def main():
+    """
+    Object Detection with Azure Custom Vision
+    """
     args = parse_args()
     config = json.load(open(args.config, "r"))
 
