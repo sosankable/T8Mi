@@ -224,7 +224,7 @@ def handle_message(event):
     """
     Reply text message
     """
-    json_file = {"TIBAME": "templates/bubble.json", "HELP": "templates/cauousel.json"}
+    json_file = {"TIBAME": "templates/bubble.json", "HELP": "templates/carousel.json"}
     try:
         filename = json_file[event.message.text.upper()]
         with open(filename, "r") as f_r:
