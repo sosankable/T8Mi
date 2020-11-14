@@ -123,7 +123,7 @@ class AzureImageOutput:
         self.draw = ImageDraw.Draw(self.img)
         self.font_size = int(5e-2 * self.img.size[1])
         self.fnt = ImageFont.truetype(
-            "static/TaipeiSansTCBeta-Regular.ttf", size=self.font_size)
+            "static/TaipeiSansTCBeta-Regular.ttf", size=self.font_size
         )
 
     def azure_object_detection(self):
