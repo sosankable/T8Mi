@@ -143,7 +143,7 @@ class AzureImageOutput:
                     [left, top, right, bot], outline=(255, 0, 0), width=3
                 )
                 self.draw.text(
-                    [left, abs(top - self.font_size)],
+                    [left, top + self.font_size],
                     "{} {}".format(name, confidence),
                     fill=(255, 0, 0),
                     font=self.fnt,
