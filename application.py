@@ -1,6 +1,7 @@
 """
 Object detection and image description on LINE bot
 """
+from datetime import datetime, timezone, timedelta
 import os
 import re
 import json
@@ -250,7 +251,8 @@ def handle_content_message(event):
         name = azure_face_recognition(filename)
 
         if name != "":
-            output = name
+            now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
+            output = "{0}, {1}".format(name, now)
         else:
             plate = azure_ocr(link)
             az_output = AzureImageOutput(link, filename)
