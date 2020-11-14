@@ -224,11 +224,17 @@ def handle_message(event):
     """
     Reply text message
     """
-    message = TextSendMessage(text=event.message.text)
-    print(event.source.user_id)
-    print(event.source.type)
-    # print(LINE_BOT.get_room_member_ids(room_id))
-    LINE_BOT.reply_message(event.reply_token, message)
+    if event.message.text.upper() == "TIBAME":
+        with open("templates/bubble.json", "r") as f_r:
+            bubble = json.load(f_r)
+        f_r.close()
+        LINE_BOT.reply_message(
+            event.reply_token,
+            [FlexSendMessage(alt_text="Information", contents=bubble)],
+        )
+    else:
+        message = TextSendMessage(text=event.message.text)
+        LINE_BOT.reply_message(event.reply_token, message)
 
 
 @HANDLER.add(MessageEvent, message=ImageMessage)
