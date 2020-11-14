@@ -121,8 +121,9 @@ class AzureImageOutput:
         self.filename = filename
         self.img = Image.open(filename)
         self.draw = ImageDraw.Draw(self.img)
+        self.font_size = int(5e-2 * self.img.size[1])
         self.fnt = ImageFont.truetype(
-            "static/TaipeiSansTCBeta-Regular.ttf", size=int(5e-2 * self.img.size[1])
+            "static/TaipeiSansTCBeta-Regular.ttf", size=self.font_size)
         )
 
     def azure_object_detection(self):
@@ -142,7 +143,7 @@ class AzureImageOutput:
                     [left, top, right, bot], outline=(255, 0, 0), width=3
                 )
                 self.draw.text(
-                    [left, abs(top - 12)],
+                    [left, abs(top - self.font_size)],
                     "{} {}".format(name, confidence),
                     fill=(255, 0, 0),
                     font=self.fnt,
@@ -174,7 +175,7 @@ class AzureImageOutput:
                     [left, top, right, bot], outline=(255, 0, 0), width=3
                 )
                 self.draw.text(
-                    [left, abs(top - 12)],
+                    [left, abs(top - self.font_size)],
                     "{} {}".format(emotion, confidence),
                     fill=(255, 0, 0),
                     font=self.fnt,
