@@ -224,15 +224,17 @@ def handle_message(event):
     """
     Reply text message
     """
-    if event.message.text.upper() == "TIBAME":
-        with open("templates/bubble.json", "r") as f_r:
+    json_file = {"TIBAME": "templates/bubble.json", "HELP": "templates/cauousel.json"}
+    try:
+        filename = json_file[event.message.text.upper()]
+        with open(filename, "r") as f_r:
             bubble = json.load(f_r)
         f_r.close()
         LINE_BOT.reply_message(
             event.reply_token,
             [FlexSendMessage(alt_text="Information", contents=bubble)],
         )
-    else:
+    except:
         message = TextSendMessage(text=event.message.text)
         LINE_BOT.reply_message(event.reply_token, message)
 
