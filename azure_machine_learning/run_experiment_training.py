@@ -5,7 +5,6 @@ import azureml
 from azureml.core import ScriptRunConfig, Dataset, Workspace, Experiment, Environment
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.model import Model
-import tensorflow as tf
 
 
 def main():
