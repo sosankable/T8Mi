@@ -1,3 +1,6 @@
+"""
+Predict mnist data with Azure machine learning
+"""
 import argparse
 import gzip
 import json
@@ -8,6 +11,9 @@ from PIL import Image
 
 
 def load_image(path):
+    """
+    Load mnist images
+    """
     f = gzip.open(path, "r")
     image_size = 28
     f.read(16)
@@ -19,16 +25,22 @@ def load_image(path):
 
 
 def parse_args():
+    """
+    Parse arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-e", "--endpoint_url", type=str, help="Path to the training data"
+        "-d", "--data_folder", type=str, help="Path to the training data"
     )
+    parser.add_argument("-e", "--endpoint_url", type=str, help="Endpoint url")
     args = parser.parse_args()
     return args
 
 
 def main():
-
+    """
+    Predict mnist data with Azure machine learning
+    """
     args = parse_args()
     # Prepare the testing data
     test_image = load_image(os.path.join(args.data_folder, "t10k-images-idx3-ubyte.gz"))
@@ -47,8 +59,8 @@ def main():
     resp = requests.post(args.endpoint_url, input_data, headers=headers)
 
     ans = resp.text.replace("[", "").replace("]", "").split(", ")
-    ans = [float(i) for i in ans]
-    print(np.argmax(ans))
+    ans = int(float(ans[0]))
+    print("The answer is {}".format(ans))
     array = np.reshape(test_image[testing_num] * 255, (28, 28))
     img = Image.fromarray(array)
     img.show()
