@@ -1,11 +1,12 @@
 """
 Deploy model to your service
 """
-
+import numpy as np
 from azureml.core import Environment, Model, Workspace
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.model import InferenceConfig
 from azureml.core.webservice import AciWebservice
+from azureml.core.authentication import InteractiveLoginAuthentication
 
 
 def main():
@@ -16,15 +17,19 @@ def main():
     environment = Environment("keras-service-environment")
     environment.python.conda_dependencies = CondaDependencies.create(
         python_version="3.7.7",
-        pip_packages=[
-            "azureml-defaults",
-            "tensorflow==2.3.1",
-            "numpy",
-            "gzip",
-        ],
+        pip_packages=["azureml-defaults", "numpy", "tensorflow==2.3.1"],
     )
     model = Model(work_space, "keras_mnist")
-    service_name = "keras_mnist-service"
+    model_list = model.list(work_space)
+    validation_accuracy = []
+    version = []
+    for i in model_list:
+        validation_accuracy.append(float(i.properties["val_accuracy"]))
+        version.append(i.version)
+    model = Model(
+        work_space, "keras_mnist", version=version[np.argmax(validation_accuracy)]
+    )
+    service_name = "keras-mnist-service"
     inference_config = InferenceConfig(
         entry_script="score_keras.py", environment=environment
     )
@@ -38,6 +43,7 @@ def main():
         overwrite=True,
     )
     service.wait_for_deployment(show_output=True)
+    print(service.get_logs())
 
 
 if __name__ == "__main__":
