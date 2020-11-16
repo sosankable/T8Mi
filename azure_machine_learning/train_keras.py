@@ -59,7 +59,7 @@ def main():
     """
     args = parse_args()
     print("===== DATA =====")
-    print("DATA PATH: {}".format(args.data_path))
+    print("DATA PATH: {}".format(args.data_folder))
     print("LIST FILES IN DATA PATH...")
     print("================")
     run = Run.get_context()
@@ -111,10 +111,10 @@ def main():
     )
 
     # ouput log
-    run.log("train_loss", history_callback.history["loss"])
-    run.log("train_accuracy", history_callback.history["accuracy"])
-    run.log("val_loss", history_callback.history["val_loss"])
-    run.log("val_accuracy", history_callback.history["val_accuracy"])
+    run.log_list("train_loss", history_callback.history["loss"])
+    run.log_list("train_accuracy", history_callback.history["accuracy"])
+    run.log_list("val_loss", history_callback.history["val_loss"])
+    run.log_list("val_accuracy", history_callback.history["val_accuracy"])
 
     print("Finished Training")
     model.save("outputs/keras_lenet.h5")
