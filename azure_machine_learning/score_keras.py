@@ -23,7 +23,9 @@ def run(raw_data):
     """
     Prediction
     """
-    data = json.loads(raw_data)["data"].reshape(1, 28, 28, 1)
+    data = json.loads(raw_data)["data"]
+    data = np.array(data)
+    data = data.reshape((1, 28, 28, 1))
     # make prediction
     y_hat = model.predict(data)
-    return np.argmax(y_hat)
+    return float(np.argmax(y_hat))
