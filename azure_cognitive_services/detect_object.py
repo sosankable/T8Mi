@@ -73,7 +73,7 @@ def main():
     img = Image.open(args.image)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(
-        "static/TaipeiSansTCBeta-Regular.ttf", size=int(5e-2 * img.size[1])
+        "../static/TaipeiSansTCBeta-Regular.ttf", size=int(5e-2 * img.size[1])
     )
     for prediction in results.predictions:
         if prediction.probability > 0.5:
