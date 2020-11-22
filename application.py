@@ -50,6 +50,12 @@ IMGUR_CONFIG = CONFIG["imgur"]
 IMGUR_CLIENT = Imgur(config=IMGUR_CONFIG)
 
 
+@app.route("/")
+def hello():
+    "hello world"
+    return "Hello World!!!!!"
+
+
 def azure_describe(url):
     """
     Output azure image description result
@@ -190,12 +196,6 @@ class AzureImageOutput:
         link = image["response"]["data"]["link"]
         os.remove(self.filename)
         return link
-
-
-@app.route("/")
-def hello():
-    "hello world"
-    return "Hello World!!!!!"
 
 
 @app.route("/callback", methods=["POST"])
