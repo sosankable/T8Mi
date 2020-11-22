@@ -1,3 +1,6 @@
+"""
+Predict mnist with local model
+"""
 import argparse
 import os
 import gzip
@@ -7,6 +10,9 @@ from PIL import Image
 
 
 def load_image(path):
+    """
+    Load mnist images
+    """
     f = gzip.open(path, "r")
     image_size = 28
     f.read(16)
@@ -18,6 +24,9 @@ def load_image(path):
 
 
 def parse_args():
+    """
+    Parse arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-d", "--data_folder", type=str, help="Path to the training data"
@@ -28,6 +37,9 @@ def parse_args():
 
 
 def main():
+    """
+    Predict mnist with local model
+    """
     args = parse_args()
     # Prepare the testing data
     test_image = load_image(os.path.join(args.data_folder, "t10k-images-idx3-ubyte.gz"))

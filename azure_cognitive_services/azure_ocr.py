@@ -1,3 +1,7 @@
+"""
+Azure OCR: get characters from image url
+"""
+
 from io import BytesIO
 import os
 import time

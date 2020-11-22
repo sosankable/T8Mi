@@ -1,3 +1,7 @@
+"""
+Azure object detection
+"""
+
 from io import BytesIO
 import requests
 import os
@@ -14,7 +18,9 @@ CV_CLIENT = ComputerVisionClient(
 
 
 def main():
-
+    """
+    Azure object detection
+    """
     url = "https://i.imgur.com/Js5H6Qa.jpg"
     response = requests.get(url)
     img = Image.open(BytesIO(response.content))
