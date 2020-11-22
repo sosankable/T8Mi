@@ -19,7 +19,7 @@ def main():
     """
     Azure OCR: get characters from image url
     """
-    url = "https://i.imgur.com/RHoXUt5.jpg"
+    url = "https://i.imgur.com/qyWiqQv.jpg"
     response = requests.get(url)
     img = Image.open(BytesIO(response.content))
     draw = ImageDraw.Draw(img)
@@ -52,7 +52,7 @@ def main():
                 draw.text(
                     [left, top - font_size],
                     line.text,
-                    fill=(255, 0, 0),
+                    fill=(0, 255, 255),
                     font=fnt,
                 )
     # Filter text for Taiwan license plate
