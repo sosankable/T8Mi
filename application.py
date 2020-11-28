@@ -207,9 +207,6 @@ def callback():
     signature = request.headers["X-Line-Signature"]
     print(signature)
     body = request.get_data(as_text=True)
-    # pylint: disable=maybe-no-member
-    print("log")
-    app.logger.info("Request body: " + body)
     print(body)
     try:
         HANDLER.handle(body, signature)
