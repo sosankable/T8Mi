@@ -99,6 +99,35 @@ def azure_ocr(url):
     return text[0].replace(".", "-") if len(text) > 0 else ""
 
 
+def azure_object_detection(url, filename):
+    img = Image.open(filename)
+    draw = ImageDraw.Draw(img)
+    font_size = int(5e-2 * img.size[1])
+    fnt = ImageFont.truetype("static/TaipeiSansTCBeta-Regular.ttf", size=font_size)
+    object_detection = CV_CLIENT.detect_objects(url)
+    if len(object_detection.objects) > 0:
+        for obj in object_detection.objects:
+            left = obj.rectangle.x
+            top = obj.rectangle.y
+            right = obj.rectangle.x + obj.rectangle.w
+            bot = obj.rectangle.y + obj.rectangle.h
+            name = obj.object_property
+            confidence = obj.confidence
+            print("{} at location {}, {}, {}, {}".format(name, left, right, top, bot))
+            draw.rectangle([left, top, right, bot], outline=(255, 0, 0), width=3)
+            draw.text(
+                [left, top + font_size],
+                "{} {}".format(name, confidence),
+                fill=(255, 0, 0),
+                font=fnt,
+            )
+    img.save(filename)
+    image = IMGUR_CLIENT.image_upload(filename, "", "")
+    link = image["response"]["data"]["link"]
+    os.remove(filename)
+    return link
+
+
 def azure_face_recognition(filename):
     """
     Azure face recognition
@@ -187,11 +216,12 @@ def handle_content_message(event):
     else:
         plate = azure_ocr(link)
         az_output = AzureImageOutput(link, filename)
-        link = az_output()
+        link_ob = az_output()
         if len(plate) > 0:
             output = "License Plate: {}".format(plate)
         else:
             output = azure_describe(link)
+        link = link_ob
 
     with open("templates/detect_result.json", "r") as f_r:
         bubble = json.load(f_r)
