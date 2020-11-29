@@ -157,32 +157,39 @@ class AzureImageOutput:
                 )
 
     def azure_face_detection(self):
-        face_api_url = "{}face/v1.0/detect".format(FACE_END)
-        headers = {"Ocp-Apim-Subscription-Key": FACE_KEY}
-        params = {
-            "returnFaceId": "true",
-            "returnFaceLandmarks": "false",
-            "returnFaceAttributes": "emotion",
-        }
-        response = requests.post(
-            face_api_url, params=params, headers=headers, json={"url": self.url}
+        # face_api_url = "{}face/v1.0/detect".format(FACE_END)
+        # headers = {"Ocp-Apim-Subscription-Key": FACE_KEY}
+        # params = {
+        #     "returnFaceId": "true",
+        #     "returnFaceLandmarks": "false",
+        #     "returnFaceAttributes": "emotion",
+        # }
+        # response = requests.post(
+        #     face_api_url, params=params, headers=headers, json={"url": self.url}
+        # )
+
+        detected_faces = FACE_CLIENT.face.detect_with_url(
+            url=self.url,
+            detectionModel="detection_02",
+            return_recognition_model=True,
+            return_face_landmarks=True,
+            return_face_attributes=["emotion"],
         )
-        if len(response.json()) > 0:
-            for obj in response.json():
-                left = obj["faceRectangle"]["left"]
-                top = obj["faceRectangle"]["top"]
-                right = obj["faceRectangle"]["left"] + obj["faceRectangle"]["width"]
-                bot = obj["faceRectangle"]["top"] + obj["faceRectangle"]["height"]
-                emotion = max(
-                    obj["faceAttributes"]["emotion"],
-                    key=obj["faceAttributes"]["emotion"].get,
-                )
-                confidence = max(obj["faceAttributes"]["emotion"].values())
-                self.draw.rectangle(
-                    [left, top, right, bot], outline=(255, 0, 0), width=3
-                )
+        if len(detected_faces) > 0:
+            for face in detected_faces:
+                rectangle = face.face_rectangle.as_dict()
+                bbox = [
+                    rectangle["left"],
+                    rectangle["top"],
+                    rectangle["left"] + rectangle["width"],
+                    rectangle["top"] + rectangle["height"],
+                ]
+                emotions = face.face_attributes.as_dict()["emotion"]
+                emotion = max(emotions, key=emotions.get)
+                confidence = max(emotions.values())
+                self.draw.rectangle(bbox, outline=(255, 0, 0), width=3)
                 self.draw.text(
-                    [left, abs(top - self.font_size)],
+                    [bbox[0], abs(bbox[1] - self.font_size)],
                     "{} {}".format(emotion, confidence),
                     fill=(255, 0, 0),
                     font=self.fnt,
