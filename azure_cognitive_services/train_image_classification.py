@@ -32,13 +32,13 @@ def parse_args():
     return args
 
 
-def add_image(label, base_image_url, project_id, trainer):
+def add_image(label, image_folder, project_id, trainer):
     """
     Add images with labels
     """
     image_list = []
     image_tag = trainer.create_tag(project_id, label)
-    filenames = glob.glob(os.path.join(base_image_url, label, "*.jpg"))
+    filenames = glob.glob(os.path.join(image_folder, label, "*.jpg"))
     for file_name in filenames:
         with open(file_name, "rb") as image_contents:
             image_list.append(
@@ -68,10 +68,10 @@ def main():
     # Make two labels in the new project
 
     print("Adding images...")
-    base_image_url = config["image_folder"]
+    image_folder = config["image_folder"]
     image_list = []
     for i in config["label"]:
-        image_list += add_image(i, base_image_url, project.id, trainer)
+        image_list += add_image(i, image_folder, project.id, trainer)
 
     upload_result = trainer.create_images_from_files(
         project.id, ImageFileCreateBatch(images=image_list)
