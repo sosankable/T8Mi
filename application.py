@@ -23,7 +23,6 @@ from linebot.models import (
 from imgur_python import Imgur
 from PIL import Image, ImageDraw, ImageFont
 import time
-from azure_cognitive import AzureImageOutput
 
 app = Flask(__name__)
 
