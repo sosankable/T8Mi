@@ -215,8 +215,7 @@ def handle_content_message(event):
         output = "{0}, {1}".format(name, now)
     else:
         plate = azure_ocr(link)
-        az_output = AzureImageOutput(link, filename)
-        link_ob = az_output()
+        link_ob = azure_object_detection(link, filename)
         if len(plate) > 0:
             output = "License Plate: {}".format(plate)
         else:
