@@ -77,10 +77,11 @@ def main():
     )
     for prediction in results.predictions:
         if prediction.probability > 0.5:
-            left = prediction.bounding_box.left * img.size[0]
-            top = prediction.bounding_box.top * img.size[1]
-            right = left + prediction.bounding_box.width * img.size[0]
-            bot = top + prediction.bounding_box.height * img.size[1]
+            bbox = prediction.bounding_box.as_dict()
+            left = bbox['left'] * img.size[0]
+            top = bbox['top'] * img.size[1]
+            right = left + bbox['width'] * img.size[0]
+            bot = top + bbox['height'] * img.size[1]
             draw.rectangle([left, top, right, bot], outline=(255, 0, 0), width=3)
             draw.text(
                 [left, abs(top - 5e-2 * img.size[1])],
