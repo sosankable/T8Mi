@@ -32,7 +32,7 @@ def parse_args():
     return args
 
 
-def add_image(trainer, label, project_id, annotation, base_image_url):
+def add_image(trainer, label, project_id, annotation, image_folder):
     """
     Add images with labels and bounding box
     """
@@ -43,13 +43,14 @@ def add_image(trainer, label, project_id, annotation, base_image_url):
         regions = [
             Region(tag_id=tag.id, left=left, top=top, width=width, height=height)
         ]
-        file_path = os.path.join(base_image_url, label, file_name + ".jpg")
+        file_path = os.path.join(image_folder, label, file_name + ".jpg")
         with open(file_path, "rb") as image_contents:
             tagged_images_with_regions.append(
                 ImageFileCreateEntry(
                     name=file_name, contents=image_contents.read(), regions=regions
                 )
             )
+        image_contents.close()
     return tagged_images_with_regions
 
 
@@ -77,12 +78,12 @@ def main():
     # ======================================================================================
 
     print("Adding images...")
-    base_image_url = config["image_folder"]
+    image_folder = config["image_folder"]
     annotations = json.load(open("annotation.json", "r"))
     tagged_images_with_regions = []
     for label in annotations.keys():
         tagged_images_with_regions += add_image(
-            trainer, label, project.id, annotations[label], base_image_url
+            trainer, label, project.id, annotations[label], image_folder
         )
 
     upload_result = trainer.create_images_from_files(
