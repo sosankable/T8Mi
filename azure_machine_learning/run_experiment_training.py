@@ -52,7 +52,7 @@ def main():
     run.register_model(
         model_name="keras_mnist",
         tags={"data": "mnist", "model": "classification"},
-        model_path="outputs/keras_lenet.pt",
+        model_path="outputs/keras_lenet.h5",
         model_framework=Model.Framework.TENSORFLOW,
         model_framework_version="2.3.1",
         properties={
