@@ -47,7 +47,6 @@ def main():
     test_image /= 255
     testing_num = np.random.randint(low=0, high=len(test_image) - 1)
 
-    # Two sets of data to score, so we get two results back
     data = {"data": test_image[testing_num].tolist()}
     # Convert to JSON string
     input_data = json.dumps(data)
