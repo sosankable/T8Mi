@@ -1,10 +1,11 @@
 """
 Run the experiment for training
 """
-import azureml
+# import azureml
 from azureml.core import ScriptRunConfig, Dataset, Workspace, Experiment, Environment
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.model import Model
+from azureml.tensorboard import Tensorboard
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
 
     # Set up the experiment for training
     experiment = Experiment(workspace=work_space, name="keras-lenet-train")
-    azureml._restclient.snapshots_client.SNAPSHOT_MAX_SIZE_BYTES = 2000000000
+#     azureml._restclient.snapshots_client.SNAPSHOT_MAX_SIZE_BYTES = 2000000000
     config = ScriptRunConfig(
         source_directory=".",
         script="train_keras.py",
@@ -44,8 +45,16 @@ def main():
         "Submitted to an Azure Machine Learning compute cluster. Click on the link below"
     )
     print("")
-    print(aml_url)
+    print(aml_url)    
+    
+    tboard = Tensorboard([run])
+    # If successful, start() returns a string with the URI of the instance.
+    tboard.start(start_browser=True)
     run.wait_for_completion(show_output=True)
+    # After your job completes, be sure to stop() the streaming otherwise it will continue to run.
+    print("Press enter to stop")
+    input()
+    tboard.stop()
 
     # Register Model
     metrics = run.get_metrics()
