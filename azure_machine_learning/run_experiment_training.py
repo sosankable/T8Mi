@@ -34,6 +34,7 @@ def main():
     # Set up the Tensoflow/Keras environment
     environment = Environment("keras-environment")
     environment.python.conda_dependencies = CondaDependencies.create(
+        python_version="3.7.7",
         pip_packages=["azureml-defaults", "numpy", "tensorflow==2.3.1"]
     )
     config.run_config.environment = environment
