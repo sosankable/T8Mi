@@ -26,7 +26,7 @@ def main():
         script="train_keras.py",
         compute_target="cpu-cluster",
         arguments=[
-            "--data_path",
+            "--data_folder",
             dataset.as_named_input("input").as_mount(),
         ],
     )
